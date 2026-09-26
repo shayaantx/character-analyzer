@@ -1,0 +1,25 @@
+services:
+  analyzer:
+    build: .
+    image: character-analyzer
+    # Write output as your user instead of root: UID=$(id -u) GID=$(id -g) docker compose run ...
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - ./videos:/data/videos:ro
+      - ./refs:/data/refs:ro
+      - ./output:/data/output
+    # No route out: the network is internal-only (the model is baked into the image,
+    # so nothing needs downloading at runtime). Image builds still have internet.
+    networks:
+      - isolated
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+networks:
+  isolated:
+    internal: true
